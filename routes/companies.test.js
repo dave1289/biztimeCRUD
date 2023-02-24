@@ -4,18 +4,18 @@ const app = require('../app.js')
 const db = require('../db.js')
 
 
-let testUser;
+let testCompany;
 
 beforeEach(async () => {
    const result = await db.query(
-      `INSERT INTO users (name, type) VALUES ('Steven', 'admin') RETURNING id, name, type;`)
-   testUser = result.rows[0]
+      `INSERT INTO companies (code,  name, description) VALUES ('NVI', 'National Vision', 'sucks') RETURNING *`)
+   testCompany = result.rows[0]
    
 })
 
 afterEach(async () => {
    await db.query(
-      `DELETE FROM users;`
+      `DELETE FROM companies;`
    )
 })
 
@@ -23,58 +23,61 @@ afterAll(async () => {
    await db.end();
 })
 
-describe("GET /users", () => {
-   test('Get a list of users', async () => {
-      const res = await request(app).get('/users')
+describe("GET /companies", () => {
+   test('Get a list of companies', async () => {
+      const res = await request(app).get('/companies')
       expect(res.statusCode).toBe(200)
-      expect(res.body).toEqual([testUser])
+      expect(res.body).toEqual([testCompany])
    })
 })
 
-describe("GET /users/:id", () => {
+describe("GET /companies/:id", () => {
    test('Get a single user', async () => {
-      const res = await request(app).get(`/users/${testUser.id}`)
+      const res = await request(app).get(`/companies/${testCompany.id}`)
       expect(res.statusCode).toBe(200)
-      expect(res.body).toEqual({ user: testUser })
+      expect(res.body).toEqual({ user: testCompany })
    })
    test('Responds with 404 for invalid id', async () => {
-      const res = await request(app).get(`/users/0`)
+      const res = await request(app).get(`/companies/0`)
       expect(res.statusCode).toBe(404)
    })
 })
 
-describe("POST /users", () => {
+describe("POST /companies", () => {
    test('Post new user', async () => {
-      const res = await request(app).post('/users').send({
+      const res = await request(app).post('/companies').send({
+         code: 'bbb',
          name: 'BillyBob',
-         type: 'staff'
+         description: 'staff'
       })
       expect(res.statusCode).toBe(201);
       expect(res.body).toEqual({
          user: {
             id: expect.any(Number),
+            code: 'bbb',
             name: 'BillyBob',
-            type: 'staff'}
+            description: 'staff'}
       })
    })
 })
 
-describe("PATCH /users", () => {
+describe("PATCH /companies", () => {
    test('updates a user', async () => {
-      const res = await request(app).patch(`/users/${testUser.id}`).send({
+      const res = await request(app).patch(`/companies/${testCompany.id}`).send({
+         code: 'bbb',
          name: 'BillyBob',
-         type: 'admin'
+         description: 'admin'
       })
       expect(res.statusCode).toBe(200);
       expect(res.body).toEqual({
          user: {
             id: expect.any(Number),
             name: 'BillyBob',
-            type: 'admin'}
+            description: 'admin'}
       })
    })
    test('Responds with 404 for invalid id', async () => {
-      const res = await request(app).get(`/users/0`)
+      const res = await request(app).get(`/companies/0`)
       expect(res.statusCode).toBe(404)
    })
 })
